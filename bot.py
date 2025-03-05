@@ -3,6 +3,8 @@ import requests
 import pandas as pd
 import discord
 from discord.ext import commands
+from apscheduler.schedulers.asyncio import AsyncIOScheduler
+import datetime
 
 # Get the Alpha Vantage API key from environment variables
 api_key = os.getenv("ALPHA_VANTAGE_API_KEY")
@@ -50,6 +52,19 @@ async def stock_alert(ctx):
                 alert_message += f"{symbol}: {', '.join(breakouts)}\n"
 
     await ctx.send(alert_message)
+
+# Scheduled task to automatically run stock alerts daily
+def scheduled_task():
+    channel_id = 1234567890  # Replace with your actual channel ID
+    channel = bot.get_channel(channel_id)
+    if channel:
+        # Send stock alert to the channel
+        bot.loop.create_task(stock_alert(channel))
+
+# Set up the scheduler
+scheduler = AsyncIOScheduler()
+scheduler.add_job(scheduled_task, 'cron', hour=8, minute=0, timezone='US/Eastern')  # Set to 8 AM EST
+scheduler.start()
 
 # Run the bot
 TOKEN = os.getenv("DISCORD_BOT_TOKEN")
